@@ -1,0 +1,5 @@
+[book]
+authors = ["Edoardo Morandi"]
+multilingual = false
+src = "src"
+title = "Streaming iterators"
