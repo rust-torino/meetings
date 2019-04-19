@@ -1,6 +1,5 @@
 # Rust-Torino 20190418
 ## Cross building with rust
-- 
 
 ---
 # Initial checklist 
