@@ -297,7 +297,7 @@ f.read_to_string(&mut buffer).unwrap();
 
 # `mut`, `mut` everywhere ðŸ˜­
 
-## You know that a block in Rust is an expression, aren't you?
+## You know that a block in Rust is an expression, don't you?
 
 ---
 
