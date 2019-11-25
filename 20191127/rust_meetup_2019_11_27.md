@@ -1,74 +1,112 @@
-# Async all the things*!
+<!--
+_footer: "*that can run asyncronously"
+-->
 
-<footnote style="font-size: 1.2rem;">*that can run asynchronously</footnote>
+# Async all the things\*!
+
 
 ---
 
 # Who are we?
 
 Luca Barbato
- * VLC
- * Rav1e
- * Rust
+ * Gentoo
+ * VideoLan
+ * rav1e
+ * rust
+
 
 Edoardo Morandi
- * Ex-bioinformatician, C++ & Python
- * Full stack dev
+ * Ex-bioinformatician
+ * C++
+ * Python
+ * ... and everything else
 
 ---
-
 # What do you know about async/await?
 
 * ECMAScript
-* Go/Ruby
+    * [Promise](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise)
+* Ruby
+    * [concurrent.Async](http://ruby-concurrency.github.io/concurrent-ruby/master/Concurrent/Async.html)
+* Go
+    * "You shall not need it"
+        * goroutine/channel all the things!
 * Async in Rust pre-1.39
+    * Old style **futures**
+    * tokio-first way
+    * other MIO-based experiments...
 
 ---
-
 # The beginning of the story
 
-* I/O operations make your program sit and wait
-* Multithreading **is not** the solution
+* Some operations make your program sit and wait
+    * I/O
+        * No/little CPU involved most of the time
+* You may want to do something useful meanwhile
+* You want start computing as soon as the data is ready
+    * You do **not** want to waste cycles in a busy-waiting.
+* Multithreading **is not** the best solution.
+    * Even if with channels...
+* Registering callbacks manually on an event loop does not really scale well.
+    * You may use MIO directly if you are *really* into this...
 
 ---
-
 # ECMAScript approach
 
 `Promise` is a "magic" object that defer the execution of a function. Some APIs (i.e. `fetch`) return a `Promise`, but almost everything can be _promisified_.
 
-It costs, and the runtime is extremely bound to the ECMAScript interpreter/JIT.
+- It comes with some memory/computation costs
+- The behaviour at runtime may depend on the ECMAScript interpreter/JIT implementation.
 
-Easier to work with using `await`.
+[then()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/then), [catch()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/catch) and [await](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/await) make its usage quite straightforward.
+
+---
+# Go approach
+
+> **Disclaimer**: not a Go programmer.
+
+The I/O happens in some implicit thread/goroutine, if there are other tasks/routines pending they are executed meanwhile.
+
+``` go
+	r := strings.NewReader("some io.Reader stream to be read\n")
+
+	buf := make([]byte, 4)
+	if _, err := io.ReadFull(r, buf); err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("%s\n", buf)
+```
+
+Linear code &ne; linear execution.
 
 ---
 
-# Go/Ruby approach
+# Async I/O code and C/C++
 
-Disclaimer: not a Go/Ruby programmer.
-Linear code &ne; linear execution. If the runtime needs to do I/O, it _automagically_ schedules the operation and resume the execution of things that are ready.
+* Fabulous collection of lovely [footguns](https://www.gnu.org/software/libc/manual/html_node/Asynchronous-I_002fO.html) thanks to `POSIX.1b`.
+    * C++11 [has](https://en.cppreference.com/w/cpp/thread/async) [some](https://en.cppreference.com/w/cpp/thread/future) [more](https://en.cppreference.com/w/cpp/thread/promise)...
+* Expect **pain**.
 
-Code is fast to write, short and easy to understand, but programmer does not have full control.
-
----
-
-# C/C++
-
-Yes, it was not in the list. For reasons.
-* Direct access to epoll/kqueue/IOCP
-* Hard (C++) or impossible (C) to create a decent low-cost abstraction
-* Fabulous way to shoot in your feet
-* Really, don't do that
+* Eventloops abstracting `epoll`, `kqueue` and friends are still less problematic.
 
 ---
 
 # Rust before 1.39
 `Future` + `tokio` for the win. But...
-* Linearity of code is lost
-* Not easy to convince the borrowck in some cases
-* In some cases you need to pay for an allocation, even if it could be theoretically avoided
+* The notation is quite cumbersome.
+  ``` rust
+    fn add<'a, A, B>(a: A, b: B) -> Box<Future<Item=i32, Error=A::Error> + 'a>
+        where A: Future<Item=i32> + 'a,
+              B: Future<Item=i32, Error=A::Error> + 'a,
+    {
+        Box::new(a.join(b).map(|(a, b)| a + b))
+    }
+  ```
+* You can get confused and the borrowck might have to ask a lot if you are *really sure* about what you are doing.
+* In some cases you need to pay for an heap allocation, even if it could be theoretically avoided
 
 ---
-
 # Example from tokio
 
 ```rust
@@ -138,14 +176,13 @@ async fn test(s: &str) -> &str {
   let data = get_data().await;
   let mut range = get_range(&data, s).await;
   drop(data);
-  
+
   sync_from_remote(&mut range).await;
   &s[range]
 }
 ```
 
 ---
-
 # Non trivial details
 
 * Suspension &rarr; stack must be stored, status must be stored
@@ -154,21 +191,40 @@ async fn test(s: &str) -> &str {
 * Optimizations of the state machine
 
 ---
-
 # Are we async yet?
 
 ---
-
 # Ecosystem status
 
-* `Future` trait in `std`
-* `future 0.3` is stable
-* `async-std 1.1` is stable
-* `tokio 0.2` is in alpha
+* [Future](https://doc.rust-lang.org/std/future/trait.Future.html) trait in `std::future` is stable.
+* [future**s**](https://crates.io/crates/futures) `0.3` is stable
+* [async-std](https://crates.io/crates/async-std) `1.1` is stable
+* [tokio](https://crates.io/crates/tokio) `0.2` is in __alpha__
 
 ---
+# What now?
 
-# Unmaintained (but useful) crates
+* There is some overlap between `async-std` and `tokio`.
+    * c.f [async-tungstenite](https://crates.io/crates/async-tungstenite) and [tokio-tungstenite](https://crates.io/crates/tokio-tungstenite)
+* [std::future::Future](https://doc.rust-lang.org/std/future) and [futures::future::Future](https://docs.rs/futures/0.3/futures/prelude/trait.Future.html) are different.
+    * You want to use [crate one](https://book.async.rs/overview/std-and-library-futures.html).
+* Thread-parallelism and async-parallelism are different
+    * One works better for CPU intensive tasks
+    * The other is geared towards I/O
+    * (You are welcome to prove me wrong ;))
 
-* Contribute!
-* `futures::compat` FTW
+---
+# I want to help!
+
+Lots of useful code can be ported from futures `0.1` to `0.3` or async-std.
+* Help in getting tokio out of alpha is welcome
+    * [quinn](https://github.com/djc/quinn) relies on tokio, anybody wants to see how it would fare with async-std?
+* Actix-web 2.0 is _almost_ out!
+
+---
+# Questions?
+
+---
+# Thank you!
+
+- See you in Turin next year?
