@@ -107,6 +107,45 @@ Linear code &ne; linear execution.
 * In some cases you need to pay for an heap allocation, even if it could be theoretically avoided
 
 ---
+
+# How it works
+
+You want something `X`, but you get
+`impl Future<Item = X, Error = E>`
+
+```rust
+let future: ConnectFuture = TcpStream::connect(&addr);
+//          ^---- This impl Future<TcpStream, Error>
+```
+
+---
+
+# Then you want to use the socket...
+
+```rust
+let future = future
+    .and_then(|socket| -> impl Future<Item=_, Error=_> {
+        io::write_all(socket, b"hello world")
+    }).and_then(|socket| {
+        io::read_exact(socket, vec![0; 11])
+    });
+```
+
+And so on, chaining your futures.
+
+---
+
+# Lazy, lazy futures
+
+Your future is useless! Until [spawn](https://docs.rs/tokio/0.1.21/tokio/executor/fn.spawn.html) or [run](https://docs.rs/tokio/0.1.21/tokio/fn.run.html)...
+
+```
+    tokio::run(future);
+```
+
+Using `tokio` runtime, current thread is blocked and the `future`(s) are executed.
+
+---
 # Example from tokio
 
 ```rust
@@ -133,9 +172,63 @@ fn main() {
 
 ---
 
-# We can do better!
+# See the downsides?
+
+* Code is not linear (like ECMAScript pre-`async/await`)
+* Pretty error prone (even if compiler screams a lot, which is helpful)
+  * Type auto deduction makes you lose track what is `impl Future` and what is your actual result
+  * You **must** return something that `impl Future` or `impl IntoFuture` (like the owl`Result<(),()>`)
+  * Using functional approaches inside `and_then` leads to further nesting
+* Handling errors can be painful (see the black hole `.map_err(|_| println!(...)`)?
+
+---
+
+# We can do better
+## A small step toward a good ecosystem: `std::Future` since 1.36
+
+---
+
+# A standard trait
+
+`futures` crate is _de facto_ the standard crate for `Future` (and related, very useful tool), so why this was needed?
+
+* A standard trait express a sort of _protocol_ that can be _understood_ from any crate
+* A language feature depends on this trait!
+
+---
+
+# Pay only for what you use
+## No more `Error`
+
+Old: `Future<Item, Error>`
+Now: `Future<Item>`
+
+You need to return errors? Use
+`Future<Item = Result<Item, Error>>`
+
+---
+
+# Technical detail: Pin
+
+Old: `fn poll(&mut self) -> Poll<Self::Item, Self::Error>`
+Now: `fn poll(self: Pin<&mut Self>, cx: &mut Context) -> Poll<Self::Output>`
+
+`Pin` is needed to have a real zero-overhead abstraction
+
+Ask for explanations if you want, it is a complex topic
+
+---
+
+# We can do even better!
 
 ## Welcome to `async/await` in Rust 1.39
+
+---
+
+# Long story short
+
+* `await` is a postfix keyword (easier to chain), unlike in ES
+* Use `.await` instead of `.and_then`
 
 ---
 
@@ -161,7 +254,7 @@ pub async fn main() -> Result<(), Box<dyn Error>> {
 
 # `Future` &ne; `Promise`
 
-* `Future` is lazy -- does not do anything until `await`ed
+* `Future` is lazy -- does not do anything until `await`ed (same as before with `spawn`/`run`)
 * `Promise` _automagically_ allocates some resources when created, and runs as soon as it is possible
 * `Future` is a **trait**, `Promise` is a concrete **object**
 * `async/await` in ES is almost syntactic sugar
@@ -191,6 +284,15 @@ async fn test(s: &str) -> &str {
 * Optimizations of the state machine
 
 ---
+# But in practice?
+
+* It is much easier than before
+* Ownership/borrowing or: How I Learned to Stop Worrying and Love the Borrowck
+* Blazingly fast
+* Fearless programming (yes, again!)
+* `tokio::main` is multithreaded by default &rarr; easy parallelization
+
+---
 # Are we async yet?
 
 ---
@@ -212,6 +314,55 @@ async fn test(s: &str) -> &str {
     * One works better for CPU intensive tasks
     * The other is geared towards I/O
     * (You are welcome to prove me wrong ;))
+
+---
+# Actual limitations
+
+* `async fn`
+* `async { /* ... */ }`
+* `async move { /* ... */ }`
+
+Aaaaand... nothing else!
+
+---
+# Missing pieces
+
+* Async closures
+* Async in traits
+* Async fn as argument
+
+---
+# Async closures
+
+* `AsyncFnOnce`, `AsyncFn`, `AsyncFnMut`
+* Borrowed arguments + yielding?
+* Pinning?
+
+---
+# Async in trait
+
+[We are still missing GAT](https://boats.gitlab.io/blog/post/async-methods-i/) :(
+```rust
+trait Foo {
+    async fn foo(&self) -> i32;
+}
+```
+Is equivalent (sort of) to
+```rust
+trait Foo {
+    type _Future<'a>: Future<Output = i32> + 'a;
+    fn foo(&self) -> Self::_Future<'a>;
+}
+```
+
+---
+# Async fn as argument
+
+To write high-order async function. 😈
+```rust
+async fn foo(bar: impl AsyncFn(&str) -> &Path) -> String
+```
+[Existential types](https://github.com/rust-lang/rfcs/blob/master/text/2071-impl-trait-existential-types.md) would be useful as well
 
 ---
 # I want to help!
