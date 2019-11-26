@@ -301,7 +301,7 @@ async fn test(s: &str) -> &str {
 * [Future](https://doc.rust-lang.org/std/future/trait.Future.html) trait in `std::future` is stable.
 * [future**s**](https://crates.io/crates/futures) `0.3` is stable
 * [async-std](https://crates.io/crates/async-std) `1.1` is stable
-* [tokio](https://crates.io/crates/tokio) `0.2` is in __alpha__
+* [tokio](https://crates.io/crates/tokio) `0.2` ~~is in __alpha__~~ came out 2019-11-26!
 
 ---
 # What now?
@@ -309,7 +309,7 @@ async fn test(s: &str) -> &str {
 * There is some overlap between `async-std` and `tokio`.
     * c.f [async-tungstenite](https://crates.io/crates/async-tungstenite) and [tokio-tungstenite](https://crates.io/crates/tokio-tungstenite)
 * [std::future::Future](https://doc.rust-lang.org/std/future) and [futures::future::Future](https://docs.rs/futures/0.3/futures/prelude/trait.Future.html) are different.
-    * You want to use [crate one](https://book.async.rs/overview/std-and-library-futures.html).
+    * You want to use [create one](https://book.async.rs/overview/std-and-library-futures.html).
 * Thread-parallelism and async-parallelism are different
     * One works better for CPU intensive tasks
     * The other is geared towards I/O
