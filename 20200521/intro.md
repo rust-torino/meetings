@@ -98,6 +98,12 @@ fn main() {
 
 # Sieve of Erathostenes
 
+[An ancient algorithm to find prime numbers](https://en.wikipedia.org/wiki/Sieve_of_Eratosthenes)
+
+---
+
+# Sieve of Erathostenes
+
 ## Javascript
 
 ```javascript
