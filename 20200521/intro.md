@@ -215,12 +215,11 @@ fn main() {
 ## Idiomatic Rust
 
 ```rust
-fn primes_upto(limit: u64) -> impl Iterator<Item = u64> {
-    use std::convert::TryFrom;
+fn primes_upto(limit: usize) -> impl Iterator<Item = usize> {
     let is_prime = if limit < 2 {
         Vec::new()
     } else {
-        let mut is_prime = vec![true; usize::try_from(limit).unwrap() - 1];
+        let mut is_prime = vec![true; limit - 1];
         let limit = (limit as f64).sqrt() as usize;
         for index in 2..limit + 1 {
             let mut iter = is_prime[index - 2..].iter_mut().step_by(index);
@@ -246,7 +245,7 @@ fn primes_upto(limit: u64) -> impl Iterator<Item = u64> {
         .into_iter()
         .enumerate()
         .filter(|&(_, is_prime)| is_prime)
-        .map(|(index, _)| u64::try_from(index).unwrap() + 2)
+        .map(|(index, _)| index + 2)
 }
 
 fn main() {
@@ -266,49 +265,8 @@ fn main() {
 * `Iterator`
 * `use`
 * Everything is an expression
-* `try_*`, `unwrap`, error handling (wrong, in this case)
 * `if let`
 * Iterators, iterators, iterators
-
----
-
-# Sieve of Erathostenes
-
-## Idiomatic Rust -- again
-
-```rust
-use std::num::TryFromIntError;
-
-fn primes_upto(limit: u64) -> Result<impl Iterator<Item = u64>, TryFromIntError> {
-    /* ... */
-        let mut is_prime = vec![true; usize::try_from(limit)? - 1];
-    /* ... */
-    let result = is_prime
-        /* ... */
-        .map(|(index, _)| u64::try_from(index).unwrap() + 2);
-    Ok(result)
-}
-
-fn main() -> Result<(), Box<dyn std::error::Error + 'static + Send + Sync>> {
-    for prime in primes_upto(100)? {
-        println!("{}", prime);
-    }
-    Ok(())
-}
-```
-
----
-
-# Sieve of Erathostenes
-
-## Observations (again!!!)
-
-* `Result<Fine, Nope>`
-* `?` operator (_try_ operator)
-* Still `unwrap`ping (maybe we should take a `usize`?)
-* Returning `Ok`
-* `main` returning a `Result`
-* `dyn Trait`
 
 ---
 
