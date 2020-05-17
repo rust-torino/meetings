@@ -66,7 +66,7 @@ fn main() {
 * `fn` -> _function_
 * Curly braces
 * Semicolons
-* `println!` is not a function, is a **macro**
+* [`println!`](https://doc.rust-lang.org/std/macro.println.html) is not a function, is a [**macro**](https://doc.rust-lang.org/reference/macros-by-example.html)
 
 ---
 
@@ -207,12 +207,12 @@ fn main() {
 * ~~Horrible~~ Non idiomatic Rust, _translated_ from Python
 * Statically typed, deduction when possible (ML langs style)
 * Syntax for return types + generics
-* Everything's _const_ by default, `mut` keyword
-* Indexing
+* [Everything's _const_ by default, `mut` keyword](https://doc.rust-lang.org/book/ch03-01-variables-and-mutability.html)
+* [Indexing](https://doc.rust-lang.org/std/ops/trait.Index.html)
 * No implicit conversions
-* Ranges
-* Iterators and chaining
-* Printing, `Display` and `Debug`
+* [Ranges](https://doc.rust-lang.org/std/ops/struct.Range.html)
+* [Iterators and chaining](https://doc.rust-lang.org/std/iter/index.html)
+* [Printing](https://doc.rust-lang.org/std/macro.println.html), [`Display` and `Debug`](https://doc.rust-lang.org/std/fmt/index.html)
 
 ---
 
@@ -267,11 +267,11 @@ fn main() {
 
 ## Observations (whoa!)
 
-* `impl Trait`
-* `Iterator`
-* `use`
-* Everything is an expression
-* `if let`
+* [`impl Trait`](https://doc.rust-lang.org/book/ch10-02-traits.html#returning-types-that-implement-traits)
+* [`Iterator`](https://doc.rust-lang.org/std/iter/trait.Iterator.html)
+* [`use` and modules](https://doc.rust-lang.org/book/ch07-02-defining-modules-to-control-scope-and-privacy.html?highlight=module#defining-modules-to-control-scope-and-privacy)
+* [Everything is an expression](https://doc.rust-lang.org/book/ch03-05-control-flow.html)
+* [`if let`](https://doc.rust-lang.org/book/ch06-03-if-let.html)
 * Iterators, iterators, iterators
 
 ---
