@@ -159,7 +159,7 @@ print(primed_upto(100))
 
 # Sieve of Erathostenes
 
-## Rust -- bad approach
+## Rust -- non idiomatic approach
 
 ```rust
 fn primes_upto(limit: u64) -> Vec<u64> {
@@ -186,7 +186,7 @@ fn primes_upto(limit: u64) -> Vec<u64> {
 
 # Sieve of Erathostenes
 
-## Rust -- bad approach (2)
+## Rust -- non idiomatic approach (2)
 
 ```rust
 fn main() {
@@ -198,7 +198,7 @@ fn main() {
 
 # Observations
 
-* Horrible Rust, _translated_ from Python
+* ~~Horrible~~ Non idiomatic Rust, _translated_ from Python
 * Statically typed, deduction when possible (ML langs style)
 * Syntax for return types + generics
 * Everything's _const_ by default, `mut` keyword
