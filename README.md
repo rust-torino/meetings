@@ -1,5 +1,7 @@
 # Meetings
 
+We tried to use [The Mozilla Community portal](https://community.mozilla.org/en/groups/rust-italia/), you may see some of the past events there.
+
 Our meetings:
 
  - January 31, Meeting #5
